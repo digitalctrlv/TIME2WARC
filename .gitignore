@@ -1,0 +1,12 @@
+.venv
+.venv/
+venv/
+__pycache__/
+
+*.db
+*.warc
+*.warc.gz
+*.jsonl
+
+.vscode/
+.idea/
