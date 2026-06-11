@@ -12,9 +12,17 @@ Due to file size constraints, the machine learning models and raw WARC datasets 
 3. **WARC Files:** Download the `.warc` or `.warc.gz` files and place them in:
    `TIME2WARC/uploaded_warcs/`
 
-## 🚀 How to Run the Application
+## How to Run the Application
 
 1. **Activate the virtual environment:**
    ```bash
    # Windows (PowerShell)
    .venv\Scripts\Activate.ps1
+
+2. **Install dependencies (if not already installed):**
+   ```bash
+   pip install -r requirements.txt
+
+3. **Run the dasboard**
+   ```bash
+   streamlit run app.py
