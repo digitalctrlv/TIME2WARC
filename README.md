@@ -13,23 +13,27 @@ Due to file size constraints, the machine learning models and raw WARC datasets 
 
 ## How to run the application
 
-1. **Activate the virtual environment:**
+1. **Clone the repository**
+   ```bash
+   git clone https://github.com/digitalctrlv/TIME2WARC.git
+   
+2.  **Activate the virtual environment:**
    ```bash
    * Windows (PowerShell): `.venv\Scripts\Activate.ps1`
    * Windows (CMD): `.venv\Scripts\activate.bat`
    * Mac/Linux: `source .venv/bin/activate`
 
-2. **Install dependencies (if not already installed):**
+4. **Install dependencies (if not already installed):**
    ```bash
    pip install -r requirements.txt
 
-3. **Launch the graphical interface via your terminal**
+5. **Launch the graphical interface via your terminal and open in a browser**
    ```bash
    streamlit run app.py
 
 ## Dashboard
-Tab 1: Scans the uploaded_warcs/ directory, initializes the relational SQLite database (websites.db), and extracts the raw text/html payloads from the inputted archive. Also make sure to upload the index provided in the /warcs directory.
+**Tab 1**: Scans the uploaded_warcs/ directory, initializes the relational SQLite database (websites.db), and extracts the raw text/html payloads from the inputted archive. Also make sure to upload the index provided in the /warcs directory.
 
-Tab 2: Loads the external RoBERTa model and evaluates the extracted HTML payloads. It assigns a predicted temporal period and a statistical confidence score to each domain, writing the outputs directly back to the database.
+**Tab 2**: Loads the external RoBERTa model and evaluates the extracted HTML payloads. It assigns a predicted temporal period and a statistical confidence score to each domain, writing the outputs directly back to the database.
 
-Tab 3: Displays the final results in an interactive data table. It provides a downloadable JSON file containing the fully annotated dataset, ready for downstream historical analysis.
+**Tab 3**: Displays the final results in an interactive data table. It provides a downloadable JSON file containing the fully annotated dataset, ready for downstream historical analysis.
