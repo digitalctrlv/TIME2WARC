@@ -2,7 +2,7 @@
 
 An analytical pipeline and interactive dashboard designed to extract, process, and temporally classify web archives (WARC files). This architecture parses raw web data, extracts HTML payloads, and utilizes a fine-tuned RoBERTa model to predict the creation period of specific domains.
 
-## Project Setup & Heavy Assets
+## Project setup & heavy assets
 
 Due to file size constraints, the machine learning models and raw WARC datasets are not hosted in this repository. You must download them manually before running the application.
 
@@ -32,4 +32,4 @@ Tab 1: Scans the uploaded_warcs/ directory, initializes the relational SQLite da
 
 Tab 2: Loads the external RoBERTa model and evaluates the extracted HTML payloads. It assigns a predicted temporal period and a statistical confidence score to each domain, writing the outputs directly back to the database.
 
-Tab 3: Inspection & Export Displays the final results in an interactive data table. It provides a downloadable JSON file containing the fully annotated dataset, ready for downstream historical analysis.
+Tab 3: Displays the final results in an interactive data table. It provides a downloadable JSON file containing the fully annotated dataset, ready for downstream historical analysis.
