@@ -16,18 +16,18 @@ Due to file size constraints, the machine learning models and raw WARC datasets 
 1. **Clone the repository**
    ```bash
    git clone https://github.com/digitalctrlv/TIME2WARC.git
-   
-2.  **Activate the virtual environment:**
+
+2. **Activate the virtual environment:**
    ```bash
    * Windows (PowerShell): `.venv\Scripts\Activate.ps1`
    * Windows (CMD): `.venv\Scripts\activate.bat`
    * Mac/Linux: `source .venv/bin/activate`
 
-4. **Install dependencies (if not already installed):**
+3. **Install dependencies (if not already installed):**
    ```bash
    pip install -r requirements.txt
 
-5. **Launch the graphical interface via your terminal and open in a browser**
+4. **Launch the graphical interface via your terminal and open in a browser**
    ```bash
    streamlit run app.py
 
