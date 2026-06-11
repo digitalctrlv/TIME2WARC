@@ -16,7 +16,7 @@ from torch.utils.data import DataLoader, Dataset
 import sqlite3
 from pathlib import Path
 import time
-from labeling_function_v8 import SignalExtractor
+from labeling_function import SignalExtractor
 from sklearn.preprocessing import LabelEncoder
 from collections import defaultdict
 from statistics import stdev
@@ -97,8 +97,6 @@ from statistics import stdev
 # print(f"Tokens shape: {item['input_ids'].shape}")
 # t = []
 
-from sqlite_db import get_ml_dataset, get_records, check_total_records, get_all_seed_urls
-
 # all_records = list(get_ml_dataset('websites.db'))
 # total_entries = len(all_records)
 # print(total_entries)
@@ -130,6 +128,26 @@ from sqlite_db import get_ml_dataset, get_records, check_total_records, get_all_
 # # Execute
 # find_spread_domains('websites.db')
 
-df = pd.read_json('./training/train_solr_test.jsonl', lines=True)
-# print(len(df.head(10).iloc[1]['payload']))
-print(len(df.iloc[2]['payload']))
+
+import pandas as pd
+from pipeline import get_ml_dataset_fixed
+
+DB_PATH = "websites.db"
+
+try:
+    print("Testing get_ml_dataset output structure...")
+    raw_records = list(get_ml_dataset_fixed(DB_PATH, target_types='text/html'))
+    
+    if not raw_records:
+        print("❌ Error: The database is empty or no text/html records were found.")
+    else:
+        df = pd.DataFrame(raw_records)
+        print("\n✅ Query executed successfully!")
+        print("Columns discovered in your DataFrame:", list(df.columns))
+        
+        if 'id' in df.columns:
+            print("🎉 SUCCESS: 'id' column found! Your pipeline will not crash.")
+        else:
+            print("❌ CRITICAL BUG: 'id' column is MISSING. Check your column commas.")
+except Exception as e:
+    print(f"❌ Query broke with error: {e}")

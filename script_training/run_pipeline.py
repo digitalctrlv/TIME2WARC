@@ -26,18 +26,18 @@ def main():
     db_path = args.database
     
     # Step 2 outputs (Masked and labeled versions)
-    mask_train = f"training/labeled_train_{dataset_name}.jsonl"
-    mask_infer = f"inference/labeled_infer_{dataset_name}.jsonl"
+    mask_train = f"./training/labeled_train_{dataset_name}.jsonl"
+    mask_infer = f"./inference/labeled_infer_{dataset_name}.jsonl"
     
     # Step 3 outputs (Masked, labeled and skeletonized versions)
-    skeleton_train = f"training/train_{dataset_name}.jsonl"
-    skeleton_infer = f"inference/train_{dataset_name}_unknown.jsonl"
+    skeleton_train = f"./training/train_{dataset_name}.jsonl"
+    skeleton_infer = f"./inference/train_{dataset_name}_unknown.jsonl"
     
     print("=== STARTING ARCHIVAL DATA PROCESSING PIPELINE ===")
     
     # 1. Parse and process WARCs to store in the SQLite database
     execute_cmd([
-        sys.executable, "script/warc_parserv4.py", # sys.executable contains absolute path to the python interpreter running master script
+        sys.executable, "warc_parserv4.py", # sys.executable contains absolute path to the python interpreter running master script
         "--warc_dir", args.warc_dir,
         "--db_path", db_path,
         "--index", args.url_index
@@ -45,7 +45,7 @@ def main():
     
     # 2. Label and split train/infer to use for just masked dataset
     execute_cmd([
-        sys.executable, "script/labeling_function_v8.py",
+        sys.executable, "labeling_function_v8.py",
         "--db_path", db_path,
         "--manual_json", args.manual_annotations,
         "--output_train", mask_train,
@@ -55,7 +55,7 @@ def main():
     # OPTIONAL: 3. Skeletonize the HTML-structure
     if not args.skip_skeleton:
         execute_cmd([
-            sys.executable, "script/preprocess_skeletonize.py",
+            sys.executable, "preprocess_skeletonize.py",
             "--input_train", mask_train,
             "--input_infer", mask_infer,
             "--output_train", skeleton_train,

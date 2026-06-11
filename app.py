@@ -3,100 +3,138 @@ import os
 import subprocess
 import sqlite3
 import pandas as pd
+from pathlib import Path
 
-st.set_page_config(page_title="XS4ALL Web Archive Pipeline", layout="wide")
+st.set_page_config(page_title="TIME2WARC Production Dashboard", layout="wide")
 
-st.title("🌐 XS4ALL Web Archiving & ML Pipeline")
-st.write("Upload WARC files, run the automated preprocessing, and execute the RoBERTa model.")
+st.title("🌐 TIME2WARC: Archival Web Processing Workbench")
+st.write("Ingest raw web archives, perform structural preprocessing transformations, and run downstream inference classification engines.")
 
-# Create tabs to mimic your architecture diagram flow
-tab1, tab2, tab3 = st.tabs(["1. Ingest & Preprocess", "2. Dataset Exploration", "3. ML Engine"])
-
-# Global Paths
 DB_PATH = "websites.db"
-INDEX_PATH = "warcs/index_warcs.json"
+UPLOAD_DIR = "uploaded_warcs"
+OUTPUT_JSONL = "./output/websites_annotated.jsonl"
 
-# --- TAB 1: INGESTION & PREPROCESSING ---
+tab1, tab2, tab3 = st.tabs(["1. Ingest Raw WARC Files", "2. Execution & Classification Engine", "3. Database Inspection Workspace"])
+
+# --- TAB 1: INGESTION ---
 with tab1:
-    st.header("Step 1: Parse & Label WARC Files")
+    st.header("Step 1: Parse and Ingest Archive Payloads")
+    st.markdown(
+        "**Note:** This phase extracts payloads from WARC records. "
+        "Upload an index file containing target URLs to filter out external out-of-scope hyperlinks."
+    )
     
-    # 1. File Upload
-    uploaded_files = st.file_uploader("Upload WARC files (.warc, .warc.gz)", accept_multiple_files=True)
-    
-    if uploaded_files:
-        os.makedirs("uploaded_warcs", exist_ok=True)
-        for uploaded_file in uploaded_files:
-            with open(os.path.join("uploaded_warcs", uploaded_file.name), "wb") as f:
-                f.write(uploaded_file.getbuffer())
-        st.success(f"Successfully saved {len(uploaded_files)} files to disk.")
+    col_a, col_b = st.columns(2)
+    with col_a:
+        warc_files = st.file_uploader("Upload target WARC archives (.warc, .warc.gz)", accept_multiple_files=True)
+    with col_b:
+        index_file = st.file_uploader("Upload tracking target URL configuration index (.json)", accept_multiple_files=False)
 
-    # 2. Pipeline Execution Buttons
-    col1, col2 = st.columns(2)
-    
-    with col1:
-        if st.button("🚀 Run WARC Parser", type="primary"):
-            st.info("Running parser script...")
-            # Triggers your exact CLI tool
-            cmd = ["python", "script/warc_parserv4.py", "--warc_dir", "uploaded_warcs", "--db_path", DB_PATH, "--index", INDEX_PATH]
-            result = subprocess.run(cmd, capture_output=True, text=True)
+    if st.button("🚀 Execute Ingestion Parsing Pipeline", type="primary"):
+        if not warc_files or not index_file:
+            st.error("Missing input parameters: Please ensure both WARC payloads and URL validation indexes are provided.")
+        else:
+            os.makedirs(UPLOAD_DIR, exist_ok=True)
             
-            if result.returncode == 0:
-                st.success("Parsing completed successfully!")
-            else:
-                st.error(f"Parser error: {result.stderr}")
+            # Save files onto workspace disk mounts
+            for wf in warc_files:
+                with open(os.path.join(UPLOAD_DIR, wf.name), "wb") as f:
+                    f.write(wf.getbuffer())
+                    
+            index_path = os.path.join(UPLOAD_DIR, index_file.name)
+            with open(index_path, "wb") as f:
+                f.write(index_file.getbuffer())
                 
-    with col2:
-        if st.button("🏷️ Run Labeling Functions"):
-            st.info("Running heuristic labeling script...")
-            cmd = ["python", "script/labeling_function_v7.py", "--db_path", DB_PATH, "--output_train", "train.jsonl", "--output_infer", "infer.jsonl"]
+            st.info("Parsing active directories and extracting valid responses to SQLite schema tables...")
+            
+            # Call your ingestion script directly
+            cmd = ["python", "script_app/warc_parser.py", "--warc_dir", UPLOAD_DIR, "--db_path", DB_PATH, "--index", index_path]
             result = subprocess.run(cmd, capture_output=True, text=True)
             
             if result.returncode == 0:
-                st.success("Labeling and splitting completed!")
+                st.success("Ingestion routine processed effectively without errors.")
             else:
-                st.error(result.stderr)
+                st.error(f"Execution Error encountered during parser stream: {result.stderr}")
 
-# --- TAB 2: EXPLORATION ---
+# --- TAB 2: INFERENCE ENGINE ---
 with tab2:
-    st.header("Database Inspection")
+    st.header("Step 2: Deep Transformer Classification Engine")
+    st.write("Run the fine-tuned RoBERTa classification sequence over parsed unannotated database items.")
+
+    skip_skeleton = st.checkbox("Skip Structural Skeletonization (Retain text block values for evaluation arrays)", value=False)
+    confidence_level = st.slider("Confidence Gating Filtering Threshold", 0.0, 1.0, 0.60, 0.05)
+
+    if st.button("🧠 Trigger Inference Model Thread", type="primary"):
+        st.info("Loading architecture configuration paths and evaluating historical sequences...")
+        
+        # 1. Initialize a native Streamlit progress bar container
+        progress_bar = st.progress(0, text="Initializing model weights...")
+
+        if os.path.exists("pipeline.py"):
+            pipeline_script_path = "pipeline.py"
+        elif os.path.exists("script_app/pipeline.py"):
+            pipeline_script_path = "script_app/pipeline.py"
+        else:
+            st.error("Missing Script: Could not locate 'pipeline.py' in the current root directory or 'script/' folder.")
+            st.stop()
+
+        # Call the refactored CLI script with explicit arguments
+        cmd = [
+            "python", pipeline_script_path, 
+            "--db_path", DB_PATH, 
+            "--threshold", str(confidence_level),
+            "--output_jsonl", OUTPUT_JSONL
+        ]
+        if skip_skeleton:
+            cmd.append("--skip-skeleton")
+
+        process = subprocess.Popen(cmd, stdout=subprocess.PIPE, stderr=subprocess.PIPE, text=True)
+
+        while True:
+            line = process.stdout.readline()
+            if not line and process.poll() is not None:
+                break
+                
+            # Catch our custom progress string format
+            if "PROGRESS_UPDATE:" in line:
+                try:
+                    percentage = int(line.split(":")[1].strip())
+                    # Update the web UI bar dynamically!
+                    progress_bar.progress(percentage, text=f"Evaluating documents via RoBERTa... {percentage}%")
+                except ValueError:
+                    pass
+            
+        stderr_output = process.stderr.read()
+        if process.returncode == 0:
+            progress_bar.progress(100, text="Inference complete!")
+            st.success("Sequence processing complete. Analytical parameters logged to database.")
+            
+            if os.path.exists(OUTPUT_JSONL):
+                with open(OUTPUT_JSONL, "rb") as file:
+                    st.download_button(
+                        label="📥 Download Annotated JSONL Dataset Backup",
+                        data=file,
+                        file_name="websites_annotated.jsonl",
+                        mime="application/jsonlines"
+                    )
+        else:
+            st.error(f"Inference execution engine failure: {stderr_output}")
+
+# --- TAB 3: INSPECTION ---
+with tab3:
+    st.header("Step 3: Database Schema Inspection & Data Verification")
     if os.path.exists(DB_PATH):
         conn = sqlite3.connect(DB_PATH)
-        # Fetch status stats
-        df_stats = pd.read_sql_query("SELECT period, COUNT(*) as count FROM websites GROUP BY period", conn)
-        st.subheader("Current Database Stats")
+        
+        # Summary distribution chart metric extraction layer
+        df_stats = pd.read_sql_query("SELECT COALESCE(period, 'Unprocessed') as period, COUNT(*) as count FROM websites GROUP BY period", conn)
+        st.subheader("Data Stratification Statistics Overview")
         st.bar_chart(df_stats.set_index('period'))
         
-        # Quick view table
-        df_preview = pd.read_sql_query("SELECT id, seed_url, url, year, period, warc_file FROM websites LIMIT 50", conn)
-        st.subheader("Parsed Records Preview (Latest 50)")
+        # Content table view
+        df_preview = pd.read_sql_query("SELECT id, seed_url, url, year, period, warc_filename FROM websites LIMIT 100", conn)
+        st.subheader("Database Record Stream (Latest 100 Elements)")
         st.dataframe(df_preview, use_container_width=True)
         conn.close()
     else:
-        st.warning("Database file not found yet. Run the parser in Tab 1.")
-
-# --- TAB 3: ML ENGINE ---
-with tab3:
-    st.header("Step 2: Downstream ML Model Workspace")
-    
-    # Optional skeletonization switch matching your diagram logic
-    skip_skeleton = st.checkbox("Skip Skeletonization (--skip-skeleton)", value=False)
-    
-    # Dropdown to select execution mode
-    ml_mode = st.radio("Select ML Operation:", ["Train (Fine-tune RoBERTa)", "Inference (Predict Unknowns)"])
-    
-    if st.button("🔥 Run ML Engine", type="primary"):
-        st.info(f"Initiating ML engine in {ml_mode} mode...")
-        
-        # Example command structure for your ML engine script
-        cmd = ["python", "script/ml_engine.py", "--db_path", DB_PATH, "--mode", ml_mode.lower()]
-        if skip_skeleton:
-            cmd.append("--skip-skeleton")
-            
-        # Run process and stream logs to the app UI
-        result = subprocess.run(cmd, capture_output=True, text=True)
-        
-        if result.returncode == 0:
-            st.success("ML Engine completed execution!")
-            st.code(result.stdout)
-        else:
-            st.error(result.stderr)
+        st.warning("Active target database container not found yet. Execute parsing pipeline arrays inside Tab 1.")
