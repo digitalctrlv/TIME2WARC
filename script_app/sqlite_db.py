@@ -22,6 +22,7 @@ def init_db(db_path):
             content_type TEXT,
             payload TEXT,
             period TEXT,
+            confidence REAL,
             warc_filename TEXT,
             warc_record_id TEXT
         )

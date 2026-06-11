@@ -129,25 +129,44 @@ from statistics import stdev
 # find_spread_domains('websites.db')
 
 
+import sqlite3
 import pandas as pd
-from pipeline import get_ml_dataset_fixed
+import os
 
 DB_PATH = "websites.db"
 
+if not os.path.exists(DB_PATH):
+    print("❌ Database not found!")
+    exit(1)
+
+conn = sqlite3.connect(DB_PATH)
+print("🔍 Testing database schema and payload truncation...\n")
+
 try:
-    print("Testing get_ml_dataset output structure...")
-    raw_records = list(get_ml_dataset_fixed(DB_PATH, target_types='text/html'))
+    # Changed 'predicted_period_confidence' to 'confidence'
+    query = """
+        SELECT 
+            seed_url, year, period, confidence, warc_filename, payload 
+        FROM websites 
+        WHERE period IS NOT NULL
+        LIMIT 5
+    """
+    df = pd.read_sql_query(query, conn)
+    print("✅ SUCCESS: The 'confidence' column exists and is readable!\n")
+
+except sqlite3.OperationalError as e:
+    print(f"⚠️ SQL Error: {e}")
+    df = pd.DataFrame() # Empty dataframe to prevent downstream crashes
+
+if not df.empty:
+    df['payload'] = df['payload'].fillna('').apply(
+        lambda x: x[:50] + "..." if len(x) > 50 else x
+    )
     
-    if not raw_records:
-        print("❌ Error: The database is empty or no text/html records were found.")
-    else:
-        df = pd.DataFrame(raw_records)
-        print("\n✅ Query executed successfully!")
-        print("Columns discovered in your DataFrame:", list(df.columns))
-        
-        if 'id' in df.columns:
-            print("🎉 SUCCESS: 'id' column found! Your pipeline will not crash.")
-        else:
-            print("❌ CRITICAL BUG: 'id' column is MISSING. Check your column commas.")
-except Exception as e:
-    print(f"❌ Query broke with error: {e}")
+    print("📊 Data Preview (Top 5 rows):")
+    print("-" * 80)
+    print(df.to_string(index=False))
+else:
+    print("📭 The query failed or there are no rows with a prediction yet.")
+
+conn.close()

@@ -34,7 +34,7 @@ class WARCParser:
 
         # Pre-compile index paths sorting by length descending for quick waterfall matching
         self.sorted_index_keys = sorted(url_index.keys(), key=len, reverse=True)
-        
+
         # Create database and tables if they don't exist
         init_db(self.db_path)
 
@@ -153,7 +153,7 @@ if __name__ == "__main__":
     from argparse import ArgumentParser
 
     parser = ArgumentParser(description="Run WARC Parser manually.")
-    parser.add_argument("--warc_dir", default="warcs/solr", help="Directory containing WARC files")
+    parser.add_argument("--warc_dir", default="warcs/toy", help="Directory containing WARC files")
     parser.add_argument("--db_path", default="websites.db", help="Path to output SQLite database")
     parser.add_argument("--index", default="url_index.json", help="Path to URL index JSON file")
     

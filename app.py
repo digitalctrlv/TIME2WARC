@@ -5,20 +5,25 @@ import sqlite3
 import pandas as pd
 from pathlib import Path
 
+import sys
+
+
 st.set_page_config(page_title="TIME2WARC Production Dashboard", layout="wide")
 
-st.title("🌐 TIME2WARC: Archival Web Processing Workbench")
-st.write("Ingest raw web archives, perform structural preprocessing transformations, and run downstream inference classification engines.")
+st.title("TIME2WARC: Periodize Early Web Collections")
+st.write("Ingest raw WARC files in the TIME2WARC engine, preprocess and run the classifier to inspect and download the new periodization of your collection in the database.")
+st.write("This classifier performs best on eary web collections and predicts whether archived websites have been created or operationalized in any of the following periods:" \
+        " **1997-1999** | **2000-2002** | **2003-2006** | **2007-2010**.   ")
 
 DB_PATH = "websites.db"
 UPLOAD_DIR = "uploaded_warcs"
 OUTPUT_JSONL = "./output/websites_annotated.jsonl"
 
-tab1, tab2, tab3 = st.tabs(["1. Ingest Raw WARC Files", "2. Execution & Classification Engine", "3. Database Inspection Workspace"])
+tab1, tab2, tab3 = st.tabs(["1. Ingest raw WARC files", "2. Run the classification engine", "3. Database workspace"])
 
-# --- TAB 1: INGESTION ---
+# ================== TAB 1 INGEST AND PARSE ==================
 with tab1:
-    st.header("Step 1: Parse and Ingest Archive Payloads")
+    st.header("Parse and store payloads to the database")
     st.markdown(
         "**Note:** This phase extracts payloads from WARC records. "
         "Upload an index file containing target URLs to filter out external out-of-scope hyperlinks."
@@ -26,11 +31,11 @@ with tab1:
     
     col_a, col_b = st.columns(2)
     with col_a:
-        warc_files = st.file_uploader("Upload target WARC archives (.warc, .warc.gz)", accept_multiple_files=True)
+        warc_files = st.file_uploader("Upload target WARC archives (.warc, .warc.gz)", accept_multiple_files="directory", max_upload_size=None)
     with col_b:
         index_file = st.file_uploader("Upload tracking target URL configuration index (.json)", accept_multiple_files=False)
 
-    if st.button("🚀 Execute Ingestion Parsing Pipeline", type="primary"):
+    if st.button(" PARSE AND INGEST ", type="primary"):
         if not warc_files or not index_file:
             st.error("Missing input parameters: Please ensure both WARC payloads and URL validation indexes are provided.")
         else:
@@ -56,38 +61,58 @@ with tab1:
             else:
                 st.error(f"Execution Error encountered during parser stream: {result.stderr}")
 
-# --- TAB 2: INFERENCE ENGINE ---
+# ================== TAB 2 CLASSIFIER ENGINE ==================
 with tab2:
-    st.header("Step 2: Deep Transformer Classification Engine")
+    st.header("Transformer period-classification Engine")
     st.write("Run the fine-tuned RoBERTa classification sequence over parsed unannotated database items.")
 
-    skip_skeleton = st.checkbox("Skip Structural Skeletonization (Retain text block values for evaluation arrays)", value=False)
-    confidence_level = st.slider("Confidence Gating Filtering Threshold", 0.0, 1.0, 0.60, 0.05)
+    # Checkbox determines both the preprocessing step AND the model weights used
+    skip_skeleton = st.checkbox("Skip **Skeletonization** (removal of all (natural) language embedded between <tags></tags>)", value=False)
+    confidence_level = st.slider("Prediction confidence filtering threshold", 0.0, 1.0, 0.60, 0.05)
 
-    if st.button("🧠 Trigger Inference Model Thread", type="primary"):
+    if st.button("Run the classifier!", type="primary"):
         st.info("Loading architecture configuration paths and evaluating historical sequences...")
         
-        # 1. Initialize a native Streamlit progress bar container
+        # 1. Initialize progress bar
         progress_bar = st.progress(0, text="Initializing model weights...")
 
+        # 2. Locate the pipeline script safely
         if os.path.exists("pipeline.py"):
-            pipeline_script_path = "pipeline.py"
+            pipeline_script_path = os.path.abspath("pipeline.py")
         elif os.path.exists("script_app/pipeline.py"):
-            pipeline_script_path = "script_app/pipeline.py"
+            pipeline_script_path = os.path.abspath("script_app/pipeline.py")
         else:
-            st.error("Missing Script: Could not locate 'pipeline.py' in the current root directory or 'script/' folder.")
+            st.error("Missing Script: could not locate 'pipeline.py' in the current root directory or 'script_app/' folder.")
             st.stop()
 
-        # Call the refactored CLI script with explicit arguments
+        db_target = os.path.abspath(DB_PATH)
+        output_target = os.path.abspath(OUTPUT_JSONL)
+
+        # 3. DYNAMIC MODEL SWITCHING
+        if skip_skeleton:
+            # If skipping skeletonization, use the v2_4 model
+            st.warning("Skeletonization bypassed. Loading default model: models/v2_3_optimal_weights_fold1")
+            model_target = os.path.abspath("./models/v2_3_optimal_weights_fold1")
+        else:
+            # Default model for skeletonized data
+            model_target = os.path.abspath("./models/v2_4_optimal_weights_fold2")
+
+        # 4. Construct the crash-proof execution command
         cmd = [
-            "python", pipeline_script_path, 
-            "--db_path", DB_PATH, 
+            sys.executable, pipeline_script_path, 
+            "--db_path", db_target, 
+            "--model_path", model_target, 
             "--threshold", str(confidence_level),
-            "--output_jsonl", OUTPUT_JSONL
+            "--output_jsonl", output_target
         ]
+        
+        # Append the flag if the checkbox is ticked
         if skip_skeleton:
             cmd.append("--skip-skeleton")
 
+        st.info(f"Executing Engine: {' '.join(cmd)}")
+
+        # 5. Run the subprocess
         process = subprocess.Popen(cmd, stdout=subprocess.PIPE, stderr=subprocess.PIPE, text=True)
 
         while True:
@@ -95,46 +120,95 @@ with tab2:
             if not line and process.poll() is not None:
                 break
                 
-            # Catch our custom progress string format
             if "PROGRESS_UPDATE:" in line:
                 try:
                     percentage = int(line.split(":")[1].strip())
-                    # Update the web UI bar dynamically!
                     progress_bar.progress(percentage, text=f"Evaluating documents via RoBERTa... {percentage}%")
                 except ValueError:
                     pass
-            
+        
         stderr_output = process.stderr.read()
+        
+        # 6. Evaluate the exit state
         if process.returncode == 0:
-            progress_bar.progress(100, text="Inference complete!")
+            progress_bar.progress(100, text="Classification complete!")
             st.success("Sequence processing complete. Analytical parameters logged to database.")
             
-            if os.path.exists(OUTPUT_JSONL):
-                with open(OUTPUT_JSONL, "rb") as file:
+            if os.path.exists(output_target):
+                with open(output_target, "rb") as file:
                     st.download_button(
-                        label="📥 Download Annotated JSONL Dataset Backup",
+                        label="📥 Download annotated JSONL dataset",
                         data=file,
                         file_name="websites_annotated.jsonl",
                         mime="application/jsonlines"
                     )
         else:
-            st.error(f"Inference execution engine failure: {stderr_output}")
+            st.error(f"Inference execution engine failure. Exit Code: {process.returncode}")
+            st.code(stderr_output if stderr_output.strip() else "EMPTY TRACEBACK: Windows killed the process (likely Out of Memory).")
 
-# --- TAB 3: INSPECTION ---
+# ================ TAB 3: DATABASE VIEWER ==============
 with tab3:
-    st.header("Step 3: Database Schema Inspection & Data Verification")
+    st.header("Database viewer for inspecting results")
+    
     if os.path.exists(DB_PATH):
         conn = sqlite3.connect(DB_PATH)
         
-        # Summary distribution chart metric extraction layer
-        df_stats = pd.read_sql_query("SELECT COALESCE(period, 'Unprocessed') as period, COUNT(*) as count FROM websites GROUP BY period", conn)
-        st.subheader("Data Stratification Statistics Overview")
-        st.bar_chart(df_stats.set_index('period'))
+        cursor = conn.cursor()
+        cursor.execute("PRAGMA table_info(websites)")
+        existing_columns = [info[1] for info in cursor.fetchall()]
         
-        # Content table view
-        df_preview = pd.read_sql_query("SELECT id, seed_url, url, year, period, warc_filename FROM websites LIMIT 100", conn)
-        st.subheader("Database Record Stream (Latest 100 Elements)")
-        st.dataframe(df_preview, use_container_width=True)
+        if 'predicted_period_confidence' in existing_columns:
+            query = """
+                SELECT 
+                    seed_url, 
+                    year, 
+                    period, 
+                    confidence, 
+                    warc_filename, 
+                    payload 
+                FROM websites 
+                WHERE period IS NOT NULL
+            """
+        else:
+            st.warning("Column 'predicted_period_confidence' is missing. Falling back to old schema.")
+            query = """
+                SELECT 
+                    seed_url, 
+                    year, 
+                    period, 
+                    warc_filename, 
+                    payload 
+                FROM websites 
+                WHERE period IS NOT NULL
+            """
+            
+        # 2. Safely execute the query
+        df_full = pd.read_sql_query(query, conn)
+
+        # 3. Process dataframe for the UI (Truncate Payload)
+        if not df_full.empty:
+            df_display = df_full.copy()
+            df_display['payload'] = df_display['payload'].fillna('').apply(
+                lambda x: x[:50] + "..." if len(x) > 50 else x
+            )
+
+            st.subheader("Predicted Domain Outcomes")
+            st.dataframe(df_display, use_container_width=True, hide_index=True)
+            
+            # 4. Create the Downloadable JSON containing the full payload
+            st.subheader("Export Data")
+            st.write("Download the complete, untruncated database records.")
+            
+            json_dump = df_full.to_json(orient="records", force_ascii=False, indent=2)
+            st.download_button(
+                label="📥 Download Annotated Database (JSON)",
+                data=json_dump,
+                file_name="time2warc_final_predictions.json",
+                mime="application/json"
+            )
+        else:
+            st.info("No predictions found in the database yet. Run the ML Engine in Tab 2.")
+            
         conn.close()
     else:
-        st.warning("Active target database container not found yet. Execute parsing pipeline arrays inside Tab 1.")
+        st.warning("Active target database container not found yet. Execute parsing pipeline in Tab 1.")
