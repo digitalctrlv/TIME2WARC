@@ -4,7 +4,6 @@ import subprocess
 import sqlite3
 import pandas as pd
 from pathlib import Path
-
 import sys
 
 
@@ -53,7 +52,7 @@ with tab1:
             st.info("Parsing active directories and extracting valid responses to SQLite schema tables...")
             
             # Call your ingestion script directly
-            cmd = ["python", "script_app/warc_parser.py", "--warc_dir", UPLOAD_DIR, "--db_path", DB_PATH, "--index", index_path]
+            cmd = [sys.executable, "script_app/warc_parser.py", "--warc_dir", UPLOAD_DIR, "--db_path", DB_PATH, "--index", index_path]
             result = subprocess.run(cmd, capture_output=True, text=True)
             
             if result.returncode == 0:
