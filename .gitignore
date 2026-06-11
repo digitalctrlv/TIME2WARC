@@ -2,11 +2,21 @@
 .venv/
 venv/
 __pycache__/
+.
+# Ignore ML Models
+models/
+saved_models/
+*.pkl
+*.bin
+*.safetensors
 
+# Ignore Databases and Data
 *.db
+*.sqlite
+*.jsonl
 *.warc
 *.warc.gz
-*.jsonl
-
+uploaded_warcs/
+output/
 .vscode/
 .idea/
