@@ -157,7 +157,7 @@ with tab3:
         cursor.execute("PRAGMA table_info(websites)")
         existing_columns = [info[1] for info in cursor.fetchall()]
         
-        if 'predicted_period_confidence' in existing_columns:
+        if 'confidence' in existing_columns:
             query = """
                 SELECT 
                     seed_url, 
@@ -170,7 +170,7 @@ with tab3:
                 WHERE period IS NOT NULL
             """
         else:
-            st.warning("Column 'predicted_period_confidence' is missing. Falling back to old schema.")
+            st.warning("Column 'confidence' is missing. Falling back to old schema.")
             query = """
                 SELECT 
                     seed_url, 
@@ -182,26 +182,26 @@ with tab3:
                 WHERE period IS NOT NULL
             """
             
-        # 2. Safely execute the query
+        # Safely execute the query
         df_full = pd.read_sql_query(query, conn)
 
-        # 3. Process dataframe for the UI (Truncate Payload)
+        # Process dataframe for the UI (truncate payload)
         if not df_full.empty:
             df_display = df_full.copy()
             df_display['payload'] = df_display['payload'].fillna('').apply(
                 lambda x: x[:50] + "..." if len(x) > 50 else x
             )
 
-            st.subheader("Predicted Domain Outcomes")
+            st.subheader("Predicted outcomes")
             st.dataframe(df_display, use_container_width=True, hide_index=True)
             
-            # 4. Create the Downloadable JSON containing the full payload
+            # Downloadable json with full payloads
             st.subheader("Export Data")
             st.write("Download the complete, untruncated database records.")
             
             json_dump = df_full.to_json(orient="records", force_ascii=False, indent=2)
             st.download_button(
-                label="📥 Download Annotated Database (JSON)",
+                label="+ Download annotated database (JSON)",
                 data=json_dump,
                 file_name="time2warc_final_predictions.json",
                 mime="application/json"
