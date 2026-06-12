@@ -1,21 +1,21 @@
 #!/usr/bin/env python3
 import os
+import time
+import requests
 import sys
 import argparse
+import subprocess
+import streamlit as st
 import sqlite3
-import pickle
 import warnings
 import numpy as np
 import pandas as pd
-import torch
 from pathlib import Path
 from sklearn.preprocessing import LabelEncoder
-from transformers import RobertaForSequenceClassification, RobertaTokenizer
 from labeling_function import SignalExtractor
-from sqlite_db import init_db, get_ml_dataset
 from preprocess_skeletonize import extract_html_skeleton
 
-# Test tje imports
+# === Test the imports
 try:
     from labeling_function import SignalExtractor
     HAS_SIGNAL_EXTRACTOR = True
@@ -28,12 +28,9 @@ try:
 except ImportError:
     HAS_SKELETONIZER = False
 
-try:
-    from sqlite_db import get_ml_dataset
-    HAS_DB_METHOD = True
-except ImportError:
-    HAS_DB_METHOD = False
+# =========== FUNCTIONS ====================
 
+# === Masking and skeletonization
 def process_payload(payload, run_skeletonized=False):
         if not isinstance(payload, str):
                 return ""
@@ -47,6 +44,9 @@ def process_payload(payload, run_skeletonized=False):
         
         return payload[:1000]
 
+
+# === Retrieving concatinated payloads from SQLite database
+# === Also defined in sqlite_db.py but copied locally here for debugging
 def get_ml_dataset_fixed(db_path, target_types=None):
     """Yields merged domain payloads from the SQLite database as dictionaries with working IDs."""
     conn = sqlite3.connect(db_path)
@@ -81,127 +81,105 @@ def get_ml_dataset_fixed(db_path, target_types=None):
         yield dict(row)
     conn.close()
 
-def main():
-    parser = argparse.ArgumentParser(description="TIME2WARC Engine")
-    parser.add_argument("--db_path", default="websites.db", help="Path to production SQLite database")
-    parser.add_argument("--model_path", default="./models/v2_3_optimal_weights_fold1", help="Path to fine-tuned model weights directory")
-    parser.add_argument("--skip-skeleton", action="store_true", help="Disable skeletonization preprocessing")
-    parser.add_argument("--threshold", type=float, default=0.6, help="Confidence threshold classification gating parameter")
-    parser.add_argument("--output_jsonl", default="./output/websites_annotated.jsonl", help="Output path for downloaded results")
-    args = parser.parse_args()
+# ================================================================
 
-    if torch.cuda.is_available():
-        device = torch.device("cuda")
-    elif torch.backends.mps.is_available():
-        device = torch.device("mps")
+# ======================== EXECUTION OF THE MODEL ================
+def query_huggingface(payload, api_url, headers, retries=3, progress_callback=None):
+    """Sends text to HF API. Alerts the UI if the model is waking up and prints strict errors."""
+    for attempt in range(retries):
+        try:
+            response = requests.post(api_url, headers=headers, json={"inputs": payload}, timeout=20)
+            if response.status_code == 200:
+                return response.json()
+            elif "is currently loading" in response.text:
+                msg = f"Model booting up on HF (Attempt {attempt+1}/{retries}). Waiting 15s..."
+                if progress_callback: progress_callback(0, msg)
+                time.sleep(15)
+            else:
+                # Force print the exact HTTP error code and message from Hugging Face
+                print(f"API HTTP ERROR {response.status_code}: {response.text}")
+                time.sleep(2)
+        except Exception as e:
+            # Force print the exact connection failure
+            print(f"CONNECTION FAILURE: {e}")
+            time.sleep(2)
+    return None
+
+def execute_pipeline(db_path, threshold, output_jsonl, skip_skeleton, hf_token, progress_callback=None):
+    """Main execution engine callable directly from Streamlit."""
+    
+    if skip_skeleton:
+        # REPLACE THIS PLACEHOLDER WHEN VERSION 2.4 IS UPLOADED
+        HF_REPO = "anoukflinkert/time2warc-v2_4-placeholder" 
     else:
-        device = torch.device("cpu")
-    print(f"Executing on device: {device}")
+        HF_REPO = "anoukflinkert/time2warc-roberta"
 
-    # Creating the labels
-    print("Initializing dynamic label restoration mapping...", flush=True)
-    label_encoder = LabelEncoder()
+    API_URL = f"https://api-inference.huggingface.co/models/{HF_REPO}"
+    headers = {"Authorization": f"Bearer {hf_token}"}
+    PERIOD_LABELS = ["19971999", "20002002", "20032006", "20072010"]
+
+    if progress_callback: progress_callback(5, "Streaming records from database...")
     
-    label_encoder.fit(["19971999", "20002002", "20032006", "20072010"])
-
-    print(f"Loading the model...")
-    # Windows forward-slashes unfortunately...
-    local_model_str = os.path.abspath(args.model_path)
-    
-    if not os.path.exists(local_model_str):
-        print(f"Error: Local model directory not found at: {local_model_str}", flush=True)
-        sys.exit(1)
-
-    model = RobertaForSequenceClassification.from_pretrained(local_model_str)
-    tokenizer = RobertaTokenizer.from_pretrained("roberta-base")
-    model = model.to(device)
-    model.eval()
-
-    # Loading data
-    print("Streaming records with 'text/html' content type from the SQLite database")
-    raw_records = list(get_ml_dataset_fixed(args.db_path, target_types='text/html'))
-
+    raw_records = list(get_ml_dataset_fixed(db_path, target_types='text/html'))
     if not raw_records:
-           print("No records available or processed inside the database")
-           return
-    
-    df = pd.DataFrame(raw_records)
-    print("Retrieved data")
+        return False, "No records available or processed inside the database."
 
+    df = pd.DataFrame(raw_records)
+    total_rows = len(df)
     predicted_periods = []
     confidence_scores = []
 
-    print("Beginning the classification loop...This might take a while...")
-    total_rows = len(df)
-    print("Maybe browse a little through a web archive?")
-
-    # Start of the loop
     for idx, row in df.iterrows():
-        cleaned_text = process_payload(row['payload'], run_skeletonized=not args.skip_skeleton)
+        cleaned_text = process_payload(row['payload'], run_skeletonized=not skip_skeleton)
+        cleaned_text = cleaned_text[:2500] 
 
-        with warnings.catch_warnings():
-            warnings.simplefilter("ignore")
+        api_result = query_huggingface(cleaned_text, API_URL, headers, retries=3, progress_callback=progress_callback)
+
+        print(f"DEBUG API RESPONSE: {api_result}")
+        period_assignment = "api_error"
+        confidence = 0.0
+
+        if api_result and isinstance(api_result, list) and isinstance(api_result[0], list):
+            predictions = api_result[0]
+            best_pred = max(predictions, key=lambda x: x['score'])
             
-            encoding = tokenizer(
-                text=cleaned_text,
-                max_length=512,
-                padding=True, 
-                return_attention_mask=True,
-                return_tensors='pt',
-                truncation=True
-            )
+            raw_label = best_pred['label']
+            confidence = float(best_pred['score'])
 
-        input_ids = encoding['input_ids'].to(device)
-        attention_mask = encoding['attention_mask'].to(device)
+            try:
+                pred_index = int(raw_label.split("_")[1]) if "LABEL_" in str(raw_label) else int(raw_label)
+            except ValueError:
+                pred_index = -1 
 
-        with torch.no_grad():
-            outputs = model(
-                input_ids=input_ids,
-                attention_mask=attention_mask
-            )
-            logits = outputs.logits
-
-        probs = torch.softmax(logits, dim=1).cpu().numpy()[0]
-        pred_label = int(np.argmax(probs))
-        confidence = float(np.max(probs))
-
-        # Check against the threshold for classification
-        if confidence >= args.threshold:
-            period_assignment = label_encoder.inverse_transform([pred_label])[0]
-        else:
-            period_assignment = "uncertain"
+            if confidence >= threshold and 0 <= pred_index < len(PERIOD_LABELS):
+                period_assignment = PERIOD_LABELS[pred_index]
+            else:
+                period_assignment = "uncertain"
 
         predicted_periods.append(period_assignment)
         confidence_scores.append(confidence)
 
-        if idx > 0 and idx % 100 == 0:
-            print(f"Evaluated sequences: {idx}/{len(df)}...")
-
         percent_complete = int(((idx + 1) / total_rows) * 100)
-        print(f"Progress update: {percent_complete}", flush=True)
-        # End of loop
+        if progress_callback:
+            # Scale the loop progress between 5% and 95%
+            scaled_percent = 5 + int(percent_complete * 0.9)
+            progress_callback(scaled_percent, f"Evaluating documents via API... {percent_complete}%")
 
     df['predicted_period'] = predicted_periods
     df['predicted_period_confidence'] = confidence_scores
 
-    # Downloadable file with predictions
-    Path(args.output_jsonl).parent.mkdir(exist_ok=True, parents=True)
-    df.to_json(args.output_jsonl, orient='records', lines=True, force_ascii=False)
+    Path(output_jsonl).parent.mkdir(exist_ok=True, parents=True)
+    df.to_json(output_jsonl, orient='records', lines=True, force_ascii=False)
 
-    print("Writing predictions back to SQLite tracking records...")
-    conn = sqlite3.connect(args.db_path)
+    if progress_callback: progress_callback(98, "Synchronizing database...")
+    
+    conn = sqlite3.connect(db_path)
     cursor = conn.cursor()
-
     for idx, row in df.iterrows():
-        cursor.execute("""
-            UPDATE websites 
-            SET period = ?, confidence = ? 
-            WHERE id = ?
-        """, (row['predicted_period'], row['predicted_period_confidence'], row['id']))
-        
+        cursor.execute("UPDATE websites SET period = ?, confidence = ? WHERE id = ?", 
+                       (row['predicted_period'], row['predicted_period_confidence'], row['id']))
     conn.commit()
     conn.close()
-    print("Database synchronized with engine prediction outputs.")
 
-if __name__ == "__main__":
-    main()
+    if progress_callback: progress_callback(100, "Classification complete!")
+    return True, "Sequence processing complete. Analytical parameters logged to database."

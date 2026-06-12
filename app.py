@@ -2,10 +2,16 @@ import streamlit as st
 import os
 import subprocess
 import sqlite3
+import requests
 import pandas as pd
 from pathlib import Path
 import sys
 
+script_app_path = os.path.abspath("script_app")
+if script_app_path not in sys.path:
+    sys.path.insert(0, script_app_path)
+
+from pipeline import execute_pipeline
 
 st.set_page_config(page_title="TIME2WARC Production Dashboard", layout="wide")
 
@@ -60,79 +66,55 @@ with tab1:
             else:
                 st.error(f"Execution Error encountered during parser stream: {result.stderr}")
 
+# Ensure Python can find your pipeline script
+if os.path.abspath("script_app") not in sys.path:
+    sys.path.append(os.path.abspath("script_app"))
+
 # ================== TAB 2 CLASSIFIER ENGINE ==================
 with tab2:
     st.header("Transformer period-classification Engine")
-    st.write("Run the fine-tuned RoBERTa classification sequence over parsed unannotated database items.")
+    st.write("Run the classification sequence via the Hugging Face Inference API.")
 
-    # Checkbox determines both the preprocessing step AND the model weights used
     skip_skeleton = st.checkbox("Skip **Skeletonization** (removal of all (natural) language embedded between <tags></tags>)", value=False)
     confidence_level = st.slider("Prediction confidence filtering threshold", 0.0, 1.0, 0.60, 0.05)
 
     if st.button("Run the classifier!", type="primary"):
-        st.info("Loading architecture configuration paths and evaluating historical sequences...")
         
-        # 1. Initialize progress bar
-        progress_bar = st.progress(0, text="Initializing model weights...")
+        progress_bar = st.progress(0, text="Initializing API connection...")
 
-        # 2. Locate the pipeline script safely
-        if os.path.exists("pipeline.py"):
-            pipeline_script_path = os.path.abspath("pipeline.py")
-        elif os.path.exists("script_app/pipeline.py"):
-            pipeline_script_path = os.path.abspath("script_app/pipeline.py")
-        else:
-            st.error("Missing Script: could not locate 'pipeline.py' in the current root directory or 'script_app/' folder.")
+        # 1. Retrieve Token
+        try:
+            hf_token = st.secrets["HF_TOKEN"]
+        except (FileNotFoundError, KeyError):
+            st.error("Missing secrets.toml. Please add your HF_TOKEN in Streamlit settings.")
             st.stop()
 
+        # 2. Setup paths
         db_target = os.path.abspath(DB_PATH)
         output_target = os.path.abspath(OUTPUT_JSONL)
 
-        # 3. DYNAMIC MODEL SWITCHING
         if skip_skeleton:
-            # If skipping skeletonization, use the v2_4 model
-            st.warning("Skeletonization bypassed. Loading default model: models/v2_3_optimal_weights_fold1")
-            model_target = os.path.abspath("./models/v2_3_optimal_weights_fold1")
+            st.warning("Skeletonization bypassed. Routing to the raw HTML model via API.")
         else:
-            # Default model for skeletonized data
-            model_target = os.path.abspath("./models/v2_4_optimal_weights_fold2")
+            st.info("Skeletonization enabled. Routing to the structure-aware model via API.")
 
-        # 4. Construct the crash-proof execution command
-        cmd = [
-            sys.executable, pipeline_script_path, 
-            "--db_path", db_target, 
-            "--model_path", model_target, 
-            "--threshold", str(confidence_level),
-            "--output_jsonl", output_target
-        ]
-        
-        # Append the flag if the checkbox is ticked
-        if skip_skeleton:
-            cmd.append("--skip-skeleton")
+        # 3. Define a UI update function to pass into the engine
+        def update_ui(percent, message):
+            progress_bar.progress(percent, text=message)
 
-        st.info(f"Executing Engine: {' '.join(cmd)}")
+        # 4. Execute the pipeline directly in the main thread
+        success, message = execute_pipeline(
+            db_path=db_target,
+            threshold=confidence_level,
+            output_jsonl=output_target,
+            skip_skeleton=skip_skeleton,
+            hf_token=hf_token,
+            progress_callback=update_ui
+        )
 
-        # 5. Run the subprocess
-        process = subprocess.Popen(cmd, stdout=subprocess.PIPE, stderr=subprocess.PIPE, text=True)
-
-        while True:
-            line = process.stdout.readline()
-            if not line and process.poll() is not None:
-                break
-                
-            if "PROGRESS_UPDATE:" in line:
-                try:
-                    percentage = int(line.split(":")[1].strip())
-                    progress_bar.progress(percentage, text=f"Evaluating documents via RoBERTa... {percentage}%")
-                except ValueError:
-                    pass
-        
-        stderr_output = process.stderr.read()
-        
-        # 6. Evaluate the exit state
-        if process.returncode == 0:
-            progress_bar.progress(100, text="Classification complete!")
-            st.success("Sequence processing complete. Analytical parameters logged to database.")
-            
+        # 5. Handle the result
+        if success:
+            st.success(message)
             if os.path.exists(output_target):
                 with open(output_target, "rb") as file:
                     st.download_button(
@@ -142,8 +124,7 @@ with tab2:
                         mime="application/jsonlines"
                     )
         else:
-            st.error(f"Inference execution engine failure. Exit Code: {process.returncode}")
-            st.code(stderr_output if stderr_output.strip() else "EMPTY TRACEBACK: Windows killed the process (likely Out of Memory).")
+            st.error(f"Inference execution engine failure: {message}")
 
 # ================ TAB 3: DATABASE VIEWER ==============
 with tab3:
