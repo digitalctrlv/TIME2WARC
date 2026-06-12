@@ -84,7 +84,7 @@ def get_ml_dataset_fixed(db_path, target_types=None):
 def main():
     parser = argparse.ArgumentParser(description="TIME2WARC Engine")
     parser.add_argument("--db_path", default="websites.db", help="Path to production SQLite database")
-    parser.add_argument("--model_path", default="anoukflinkert/TIME2WARC_masked", help="Path to fine-tuned model weights directory")
+    parser.add_argument("--model_path", default="./models/v2_3_optimal_weights_fold1", help="Path to fine-tuned model weights directory")
     parser.add_argument("--skip-skeleton", action="store_true", help="Disable skeletonization preprocessing")
     parser.add_argument("--threshold", type=float, default=0.6, help="Confidence threshold classification gating parameter")
     parser.add_argument("--output_jsonl", default="./output/websites_annotated.jsonl", help="Output path for downloaded results")
