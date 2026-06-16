@@ -153,7 +153,7 @@ if __name__ == "__main__":
     from argparse import ArgumentParser
 
     parser = ArgumentParser(description="Run WARC Parser manually.")
-    parser.add_argument("--warc_dir", default="warcs/toy", help="Directory containing WARC files")
+    parser.add_argument("--warc_dir", default="../warcs/toy", help="Directory containing WARC files")
     parser.add_argument("--db_path", default="websites.db", help="Path to output SQLite database")
     parser.add_argument("--index", default="url_index.json", help="Path to URL index JSON file")
     
