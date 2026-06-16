@@ -30,7 +30,7 @@ with tab1:
     
     col_a, col_b = st.columns(2)
     with col_a:
-        warc_files = st.file_uploader("Upload target WARC archives (.warc, .warc.gz)", accept_multiple_files="directory", max_upload_size=None)
+        warc_files = st.file_uploader("Upload target WARC archives (.warc, .warc.gz)", accept_multiple_files="directory")
     with col_b:
         index_file = st.file_uploader("Upload tracking target URL configuration index (.json)", accept_multiple_files=False)
 
@@ -42,7 +42,12 @@ with tab1:
             
             # Save files onto workspace disk mounts
             for wf in warc_files:
-                with open(os.path.join(UPLOAD_DIR, wf.name), "wb") as f:
+                file_path = os.path.join(UPLOAD_DIR, wf.name)
+
+                # Any subdirectories embedded in wf.name are created first
+                os.makedirs(os.path.dirname(file_path), exist_ok=True)
+
+                with open(file_path, "wb") as f:
                     f.write(wf.getbuffer())
                     
             index_path = os.path.join(UPLOAD_DIR, index_file.name)
@@ -194,8 +199,12 @@ with tab3:
             st.subheader("Predicted outcomes")
             st.dataframe(df_display, use_container_width=True, hide_index=True)
             
+            df_display['wayback_link']
+            st.dataframe(df_display,
+                         column_config={})
+            
             # Downloadable json with full payloads
-            st.subheader("Export Data")
+            st.subheader("Export data")
             st.write("Download the complete, untruncated database records.")
             
             json_dump = df_full.to_json(orient="records", force_ascii=False, indent=2)
