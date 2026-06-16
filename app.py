@@ -114,7 +114,7 @@ with tab2:
         if skip_skeleton:
             cmd.append("--skip-skeleton")
 
-        st.info(f"Executing Engine: {' '.join(cmd)}")
+        # st.info(f"Executing Engine: {' '.join(cmd)}")
 
         # 5. Run the subprocess
         process = subprocess.Popen(cmd, stdout=subprocess.PIPE, stderr=subprocess.PIPE, text=True)
@@ -138,14 +138,8 @@ with tab2:
             progress_bar.progress(100, text="Classification complete!")
             st.success("Sequence processing complete. Analytical parameters logged to database.")
             
-            if os.path.exists(output_target):
-                with open(output_target, "rb") as file:
-                    st.download_button(
-                        label="📥 Download annotated JSONL dataset",
-                        data=file,
-                        file_name="websites_annotated.jsonl",
-                        mime="application/jsonlines"
-                    )
+            st.info("Classification data saved to database. Go to Tab 3 to view and export your annotated dataset.")
+
         else:
             st.error(f"Inference execution engine failure. Exit Code: {process.returncode}")
             st.code(stderr_output if stderr_output.strip() else "EMPTY TRACEBACK: Windows killed the process (likely Out of Memory).")
@@ -188,6 +182,10 @@ with tab3:
             
         # Safely execute the query
         df_full = pd.read_sql_query(query, conn)
+        
+        base_url = "http://webarchief.kb.nl:8080/archived/"
+        timestamp = df_full['warc_filename'].str.extract(r'IAH-(\d{14})', expand=False)
+        df_full['wayback_link'] = base_url + timestamp + "/https://" + df_full['seed_url'].astype(str)
 
         # Process dataframe for the UI (truncate payload)
         if not df_full.empty:
@@ -197,11 +195,15 @@ with tab3:
             )
 
             st.subheader("Predicted outcomes")
-            st.dataframe(df_display, use_container_width=True, hide_index=True)
-            
-            df_display['wayback_link']
-            st.dataframe(df_display,
-                         column_config={})
+            st.dataframe(df_display, 
+                         use_container_width=True, 
+                         hide_index=True,
+                        column_config={
+                            "wayback_link": st.column_config.LinkColumn(
+                                label="Open in the Wayback Machine!",
+                                display_text="🔗 Open website"
+                            )
+                        })
             
             # Downloadable json with full payloads
             st.subheader("Export data")
@@ -209,14 +211,38 @@ with tab3:
             
             json_dump = df_full.to_json(orient="records", force_ascii=False, indent=2)
             st.download_button(
-                label="+ Download annotated database (JSON)",
+                label="📥 Download annotated database (JSON)",
                 data=json_dump,
                 file_name="time2warc_final_predictions.json",
                 mime="application/json"
             )
         else:
             st.info("No predictions found in the database yet. Run the ML Engine in Tab 2.")
+
+        # SQL EXPLORATION
+        st.markdown("---")
+        st.subheader("Custom SQL Workspace")
+        st.write("Write raw SQLite queries to filter, aggregate, and explore your parsed data.")
+            
+        user_query = st.text_area("SQL Query", value="SELECT period, COUNT(*) as count FROM websites GROUP BY period ORDER BY count DESC;")
+        
+        if st.button("Execute SQL"):
+            try:
+                custom_df = pd.read_sql_query(user_query, conn)
+                st.dataframe(custom_df, use_container_width=True, hide_index=True)
+                
+                # Provide an instant CSV download for whatever they queried
+                st.download_button(
+                    label="Download Query Results (CSV)",
+                    data=custom_df.to_csv(index=False).encode('utf-8'),
+                    file_name="custom_sql_export.csv",
+                    mime="text/csv"
+                )
+            except Exception as e:
+                st.error(f"SQL Error: {e}")    
             
         conn.close()
     else:
         st.warning("Active target database container not found yet. Execute parsing pipeline in Tab 1.")
+
+
