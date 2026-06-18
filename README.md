@@ -32,7 +32,7 @@ Due to file size constraints, the machine learning models and raw WARC datasets 
    ```bash
    streamlit run app.py
    ```
-   or for larger warc files (advised):
+   or (advised) for larger WARC files (max. 2GB):
    
    ```bash
    streamlit run app.py --server.maxUploadSize=2000
