@@ -31,7 +31,12 @@ Due to file size constraints, the machine learning models and raw WARC datasets 
 4. **Launch the graphical interface via your terminal and open in a browser**
    ```bash
    streamlit run app.py
-
+   ```
+   or for larger warc files (advised):
+   
+   ```bash
+   streamlit run app.py --server.maxUploadSize=2000
+   
 ## Dashboard
 **Tab 1**: Scans the uploaded_warcs/ directory, initializes the relational SQLite database (websites.db), and extracts the raw text/html payloads from the inputted archive. Also make sure to upload the index provided in the /warcs directory.
 
