@@ -1,0 +1,477 @@
+/* GLOBAL */
+@font-face{
+  font-family:"Pixelated MS Sans Serif";
+  src: url("MS Sans Serif.ttf") format("truetype");
+  font-weight:normal;
+  font-style:normal;
+}
+
+.stApp {
+    /* background: linear-gradient(to bottom right, white, white, rgb(204, 231, 254)); */
+    background-attachment: fixed;
+    background: linear-gradient(167deg, #c0c0c0 60%, #63d931 190%);
+
+    color: #FFFFFF;
+}
+
+
+/* ==== START BLOCK ==== */
+
+[data-testid="stHeader"] {
+    background: #000080 !important;
+    background: linear-gradient(90deg, #000080, #1084d0) !important;
+    min-height: 2rem !important;
+    height: 2rem !important;
+}
+
+/* Selecteer de hoofd-contentcontainer via de data-testid */
+[data-testid="stMainBlockContainer"] {
+    max-width: 80vw !important;    /* De gewenste breedte van je applicatieblok */
+    margin-left: auto !important;   /* Centreert het blok horizontaal */
+    margin-right: auto !important;  /* Centreert het blok horizontaal */
+    padding-top: 4rem !important;   /* Ruimte aan de bovenkant voor ademruimte */
+    padding-bottom: 6rem !important;/* Voorkomt dat content strak op de bodem zit */
+}
+
+/* Hardcode solutions */
+/* [class^="st-emotion-cache"] h1, 
+[class^="st-emotion-cache"] h2, 
+[class^="st-emotion-cache"] h3, 
+[class^="st-emotion-cache"] h4, 
+[class^="st-emotion-cache"] h5, 
+[class^="st-emotion-cache"] h6,
+[class*=" st-emotion-cache"] h1,
+[class*=" st-emotion-cache"] h2,
+[class*=" st-emotion-cache"] h3 {
+    font-family: "MS-Sans-Serif", Arial, sans-serif !important;
+} */
+
+[class^="st-emotion-cache"] p {
+    font-size: 14px;
+    color: #222222;
+    font-family: Arial, sans-serif;
+}
+
+#time-2-warc-periodize-early-web-collections {
+    font-family: "MS-Sans-Serif", Arial, sans-serif !important;
+    font-size: 4vw;
+    color: #222222;
+}
+
+#time-2-warc-periodize-early-web-collections p {
+    font-size: 2vw;
+    position-area: left;
+    font-family: "MS-Sans-Serif", Arial, sans-serif !important;
+}
+
+#time-2-warc-periodize-early-web-collections::after {
+    content: "";
+    display: block;
+    margin-left: 10;
+    margin-bottom: 1px; 
+    width: 73vw;
+    height: 3px;
+    opacity: 0.5;
+    background: linear-gradient(to right, red 20%, yellow 20%, yellow 36%, green 36%, green 60%, blue 60%, blue 100%);
+}
+
+.retro-icon {
+    width: 2em;      
+    height: 1.5em;
+    image-rendering: pixelated;
+}
+
+/* --- WINDOWS 98 COMPONENTs) --- */
+
+.window {
+    background: #c0c0c0 !important;
+    box-shadow: inset -1px -1px #0a0a0a, inset 1px 1px #fff, inset -2px -2px grey, inset 2px 2px #dfdfdf !important;
+    padding: 3px !important;
+    box-sizing: border-box;
+}
+
+.title-bar {
+    background: #000080 !important;
+    background: linear-gradient(90deg, #000080, #1084d0) !important;
+    
+    min-height: 18px !important;
+    height: 18px !important;
+    
+    display: flex !important;
+    align-items: center !important;
+    padding: 2px 6px !important;
+    box-sizing: border-box !important;
+}
+
+.title-bar-text {
+    font-family: "Pixelated MS Sans Serif", Arial, sans-serif !important;
+    font-size: 11px !important;
+    color: #ffffff !important;
+    font-weight: bold !important;
+    margin: 0 !important;
+    line-height: 14px !important; 
+}
+
+.window-body {
+    margin: 8px !important;
+}
+
+.diagram-container {
+    background: #ffffff !important; 
+    border: 2px solid #808080 !important; 
+    box-shadow: inset 1px 1px #0a0a0a, inset -1px -1px #fff !important;
+    padding: 10px;
+    display: flex;
+    justify-content: center;
+}
+
+.retro-diagram {
+    max-width: 100%;
+    height: auto;
+    image-rendering: pixelated;
+}
+
+/* buttons */
+[data-testid="stTabs"] button[role="tab"] [data-testid="stMarkdownContainer"] p {
+    font-family: "Pixelated MS Sans Serif", Arial, sans-serif !important;
+    color: #222222 !important;
+    font-size: 3vh; 
+}
+
+[data-testid="stTabs"] button[role="tab"][aria-selected="true"] [data-testid="stMarkdownContainer"] p {
+    color: #787978 !important; /* Jouw ombre/accentkleur voor de actieve tab */
+    font-weight: bold !important;
+}
+
+[data-testid="stTabs"] button[role="tab"], 
+[data-testid="stBaseButton-secondary"] {
+    width: 100% !important;
+    background: #c0c0c0 !important;
+    border: none !important;
+    border-radius: 0px !important;
+    overflow: hidden !important;
+    
+    box-shadow: inset -1px -1px #0a0a0a, inset 1px 1px #fff, inset -2px -2px grey, inset 2px 2px #dfdfdf !important;
+    box-sizing: border-box !important;
+    min-height: 28px !important; 
+    min-width: 75px !important;
+    padding: 2px 12px !important;
+    
+    margin-right: 4px !important; 
+}
+
+[data-testid="stTabs"] button[role="tab"] [data-testid="stMarkdownContainer"] p {
+    font-family: "Pixelated MS Sans Serif", Arial, sans-serif !important;
+    font-size: 15px !important;
+    text-align: center !important;
+    color: black !important;
+    text-shadow: 0 0 #222;
+    margin: 0 !important;
+    padding: 0 4px !important;
+    white-space: nowrap !important;
+    overflow: hidden !important;
+    text-overflow: ellipsis !important;
+}
+
+[data-testid="stTabs"] button[role="tab"][aria-selected="true"] {
+    background: #e0e0e0 !important; 
+    
+    box-shadow: inset 1px 1px #0a0a0a, inset -1px -1px #fff, inset 2px 2px grey, inset -2px -2px #dfdfdf !important;
+}
+
+[data-testid="stBaseButton-secondary"]:active {
+    background: #e0e0e0 !important;
+    box-shadow: inset 1px 1px #0a0a0a, inset -1px -1px #fff, inset 2px 2px grey, inset -2px -2px #dfdfdf !important;
+}
+
+[data-testid="stTabs"] [data-baseweb="tab-highlight"], 
+[data-testid="stTabs"] [data-baseweb="tab-border"] {
+    display: none !important;
+}
+
+[data-testid="stTabs"] button[role="tab"], 
+[data-testid="stBaseButton-secondary"],
+[data-testid="stBaseButton-primary"],
+[data-testid="stPopoverButton"] {
+    width: auto !important; /* Of 100% indien gewenst in kolommen */
+    background: #c0c0c0 !important;
+    border: none !important;
+    border-radius: 0px !important;
+    overflow: hidden !important;
+    box-shadow: inset -1px -1px #0a0a0a, inset 1px 1px #fff, inset -2px -2px grey, inset 2px 2px #dfdfdf !important;
+    box-sizing: border-box !important;
+    min-height: 28px !important; 
+    padding: 2px 12px !important;
+}
+
+[data-testid="stTabs"] button[role="tab"] [data-testid="stMarkdownContainer"] p,
+[data-testid="stBaseButton-secondary"] [data-testid="stMarkdownContainer"] p,
+[data-testid="stBaseButton-primary"] [data-testid="stMarkdownContainer"] p,
+[data-testid="stPopoverButton"] [data-testid="stMarkdownContainer"] p {
+    font-family: "Pixelated MS Sans Serif", "MS-Sans-Serif", Arial, sans-serif !important;
+    font-size: 11px !important;
+    color: #000000 !important;
+    text-align: center !important;
+    margin: 0 !important;
+}
+
+[data-testid="stTabs"] button[role="tab"][aria-selected="true"],
+[data-testid="stBaseButton-secondary"]:active,
+[data-testid="stBaseButton-primary"]:active,
+[data-testid="stPopoverButton"]:active {
+    background: #e0e0e0 !important;
+    box-shadow: inset 1px 1px #0a0a0a, inset -1px -1px #fff, inset 2px 2px grey, inset -2px -2px #dfdfdf !important;
+}
+
+
+/* ==== CONTENT OF TABS ==== */
+
+[data-testid="stMainBlockContainer"] h2, 
+[data-testid="stMainBlockContainer"] h2 span {
+    font-family: "MS-Sans-Serif", Arial, sans-serif !important;
+    font-size: 30px !important;
+    color: #222222 !important;
+}
+
+[data-testid="stMainBlockContainer"] h3, 
+[data-testid="stMainBlockContainer"] h3 span {
+    font-family: Arial, sans-serif !important;
+    font-size: 20px !important;
+    color: #222222 !important;
+    margin-bottom: 5px !important;
+}
+
+/* tab 1 */ 
+/* file uploader dropzones */
+/* box styling */
+[data-testid="stFileUploaderDropzone"] {
+    background: #ffffff !important; 
+    border: none !important;        
+    border-radius: 0px !important; 
+    
+    /* Jouw iconische ingedrukte Windows 95 3D-rand */
+    box-shadow: inset -1px -1px #fff, inset 1px 1px grey, inset -2px -2px #dfdfdf, inset 2px 2px #0a0a0a !important;
+    
+    margin: 0 !important;
+    padding: 10px !important; 
+    box-sizing: border-box !important;
+}
+
+/* icon */
+[data-testid="stFileUploaderDropzone"] [data-testid="stIconMaterial"] {
+    display: none !important;
+}
+
+/* button */
+[data-testid="stFileUploaderDropzone"] button {
+    width: auto !important;          
+    min-height: 24px !important;   
+    padding: 2px 10px !important; 
+    margin-bottom: 4px !important;
+}
+
+/* button text */
+[data-testid="stFileUploaderDropzone"] button [data-testid="stMarkdownContainer"] p {
+    font-family: "Pixelated MS Sans Serif", "MS-Sans-Serif", Arial, sans-serif !important;
+    font-size: 11px !important;
+    color: #000000 !important;
+    margin: 0 !important;
+}
+
+/* help text */
+[data-testid="stFileUploaderDropzoneInstructions"] span {
+    font-family: "MS-Sans-Serif", Arial, sans-serif !important;
+    font-size: 11px !important;
+    color: #808080 !important; 
+}
+
+/* tab 2 */
+/* progress bar */
+[data-testid="stProgressBarTrack"] {
+    -webkit-appearance: none;
+    -moz-appearance: none;
+    appearance: none;
+    border: none !important;
+    border-radius: 0px !important;
+    background-color: #c0c0c0 !important; 
+    
+    box-shadow: inset -2px -2px #dfdfdf, inset 2px 2px grey !important;
+    box-sizing: border-box !important;
+    height: 32px !important;
+    padding: 4px !important;
+}
+[data-testid="stProgressBarTrack"] > div {
+    background-color: navy !important;
+    height: 100% !important;
+    border-radius: 0px !important;
+}
+
+/* text box */
+.win95-treeview {
+    margin-top: 10px;
+    margin-bottom: 10px;
+}
+
+.win95-treeview summary {
+    font-family: "MS-Sans-Serif", Arial, sans-serif !important;
+    font-size: 16px !important;
+    color: #000000 !important;
+    list-style: none; /* Verwijdert het standaard driehoekje in Chrome/Firefox */
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    user-select: none;
+}
+
+.win95-treeview summary::-webkit-details-marker {
+    display: none;
+}
+
+.win95-treeview summary::before {
+    content: "";
+    display: inline-block;
+    width: 9px;
+    height: 9px;
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='9' height='9' viewBox='0 0 9 9'%3E%3Crect x='0' y='0' width='9' height='9' fill='white' stroke='gray' stroke-width='1'/%3E%3Cline x1='2' y1='4' x2='7' y2='4' stroke='black' stroke-width='1'/%3E%3Cline x1='4' y1='2' x2='4' y2='7' stroke='black' stroke-width='1'/%3E%3C/svg%3E");
+    background-repeat: no-repeat;
+}
+
+.win95-treeview[open] summary::before {
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='9' height='9' viewBox='0 0 9 9'%3E%3Crect x='0' y='0' width='9' height='9' fill='white' stroke='gray' stroke-width='1'/%3E%3Cline x1='2' y1='4' x2='7' y2='4' stroke='black' stroke-width='1'/%3E%3C/svg%3E");
+}
+
+.win95-treeview[open] .win95-textbox {
+    margin-top: 4px;
+    /* background: #ffffff !important; */
+    box-shadow: inset -1px -1px #fff, inset 1px 1px grey, inset -2px -2px #dfdfdf, inset 2px 2px #0a0a0a !important;
+    padding: 2px !important;
+}
+
+.win95-textbox p {
+    font-family: "Pixelated MS Sans Serif", "MS-Sans-Serif", Arial, sans-serif !important;
+    font-size: 13px !important;
+    color: #000000 !important;
+    padding: 8px !important;
+    margin: 0 !important;
+}
+
+.win95-textbox ul {
+    font-family: "Pixelated MS Sans Serif", "MS-Sans-Serif", Arial, sans-serif !important;
+    font-size: 13px !important;
+    color: #000000 !important;
+    margin: 0 !important;
+}
+
+.win95-grid {
+    background: #fff;
+    box-shadow: inset -1px -1px #fff, inset 1px 1px grey, inset -2px -2px #dfdfdf, inset 2px 2px #0a0a0a !important;
+    margin: 10px 0;
+    margin-left: 8px !important;
+    margin-right: 8px !important;
+}
+.win95-grid table {
+    width: 100%;
+    border-collapse: collapse;
+    font-family: "Pixelated MS Sans Serif", Arial, sans-serif;
+    font-size: 11px;
+    color: #000;
+}
+.win95-grid th {
+    background: #c0c0c0;
+    padding: 4px 6px;
+    text-align: left;
+    box-shadow: inset -1px -1px #0a0a0a, inset 1px 1px #fff, inset -2px -2px grey, inset 2px 2px #dfdfdf !important;
+}
+.win95-grid th small { font-size: 9px; color: #444; }
+.win95-grid td {
+    padding: 6px;
+    border-right: 1px solid #dfdfdf;
+    border-bottom: 1px solid #dfdfdf;
+    text-align: right;
+}
+.win95-grid td:first-child { text-align: left; }
+
+/* ==========================================================================
+   WIDGETS: WINDOWS 98 SLIDER / TRACKBAR
+   ========================================================================== */
+
+[data-baseweb="slider"] .st-emotion-cache-1rr4qq7, 
+[data-baseweb="slider"] .st-emotion-cache-dx6mrm {
+    background-color: #ffffff !important;
+    height: 6px !important; /* Dunne, strakke Windows balk */
+    border: none !important;
+    border-radius: 0px !important;
+    /* Ingedrukte 3D-rand voor de balk */
+    box-shadow: inset 1px 1px #0a0a0a, inset -1px -1px #fff, inset 2px 2px grey, inset -2px -2px #dfdfdf !important;
+}
+
+[data-baseweb="slider"] .st-g4 {
+    display: none !important;
+}
+
+[data-baseweb="slider"] [role="slider"] {
+    width: 12px !important;   
+    height: 20px !important; 
+    background-color: #c0c0c0 !important;
+    border: none !important;
+    border-radius: 0px !important;
+    /* Opstaande Windows 95 3D-rand */
+    box-shadow: inset -1px -1px #0a0a0a, inset 1px 1px #fff, inset -2px -2px grey, inset 2px 2px #dfdfdf !important;
+    cursor: pointer !important;
+    top: -3px !important;
+}
+
+[data-baseweb="slider"] [role="slider"]:active {
+    background-color: #e0e0e0 !important;
+}
+
+[data-testid="stSliderThumbValue"] {
+    background: #ffffcc !important; 
+    border: 1px solid #000000 !important;
+    border-radius: 0px !important;
+    padding: 1px 4px !important;
+    top: -25px !important; 
+    box-shadow: 2px 2px 0px rgba(0, 0, 0, 0.2) !important;
+}
+
+[data-testid="stSliderThumbValue"] p {
+    font-family: "Pixelated MS Sans Serif", Arial, sans-serif !important;
+    font-size: 11px !important;
+    color: #000000 !important;
+}
+
+[data-testid="stSliderTickBar"] p {
+    font-family: "Pixelated MS Sans Serif", Arial, sans-serif !important;
+    font-size: 11px !important;
+    color: #000000 !important;
+    margin-top: 4px !important;
+}
+
+/* ==========================================================================
+   WIDGETS: RETRO ALERT BOXEN (Gecorrigeerd voor verborgen binnen-boxen)
+   ========================================================================== */
+
+/* Pak direct de hoofdklasse van de alerts */
+.stAlert {
+    background-color: #c0c0c0 !important; /* Klassiek Windows grijs */
+    border: none !important;              /* Verwijder de felle zijlijnen */
+    border-radius: 0px !important;        /* Weg met de ronde hoeken */
+    
+    /* Opstaande Windows 95 3D-rand */
+    box-shadow: inset -1px -1px #0a0a0a, inset 1px 1px #fff, inset -2px -2px grey, inset 2px 2px #dfdfdf !important;
+}
+
+/* Zorg dat de tekst en eventuele divs binnenin de juiste kleur en font krijgen */
+.stAlert p, 
+.stAlert div, 
+.stAlert span {
+    font-family: "Pixelated MS Sans Serif", "MS-Sans-Serif", Arial, sans-serif !important;
+    font-size: 11px !important;
+    color: #000000 !important; /* Forceer zwarte tekst, ongeacht error of success */
+}
+
+/* Geef het icoontje links een vaste, zwarte retro kleur */
+.stAlert [data-testid="stNotificationIcon"] {
+    color: #000000 !important;
+}

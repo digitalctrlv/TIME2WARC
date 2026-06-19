@@ -45,7 +45,7 @@ def process_payload(payload, run_skeletonized=False):
             for signal_name, pattern in SignalExtractor.regex_patterns.items():
                 payload = pattern.sub("", payload)
         
-        return payload[:1000]
+        return payload
 
 def get_ml_dataset_fixed(db_path, target_types=None):
     """Yields merged domain payloads from the SQLite database as dictionaries with working IDs."""
@@ -66,16 +66,20 @@ def get_ml_dataset_fixed(db_path, target_types=None):
     else:
         if isinstance(target_types, str):
             target_types = [target_types]
+        
+        like_clauses = ' OR '.join(['content_type LIKE ?'] * len(target_types))
+        like_params = tuple(f"{t}%" for t in target_types)
+        
         placeholders = ','.join(['?'] * len(target_types))
         query = f'''
             SELECT 
                 MIN(id) as id, 
                 seed_url, 
                 GROUP_CONCAT(payload, CHAR(10) || CHAR(10)) as payload
-            FROM (SELECT * FROM websites WHERE content_type IN ({placeholders}) ORDER BY LENGTH(url) ASC) 
+            FROM (SELECT * FROM websites WHERE ({like_clauses}) ORDER BY LENGTH(url) ASC) 
             GROUP BY seed_url
         '''
-        cursor.execute(query, tuple(target_types))    
+        cursor.execute(query, tuple(like_params))    
         
     for row in cursor:
         yield dict(row)
@@ -88,6 +92,7 @@ def main():
     parser.add_argument("--skip-skeleton", action="store_true", help="Disable skeletonization preprocessing")
     parser.add_argument("--threshold", type=float, default=0.6, help="Confidence threshold classification gating parameter")
     parser.add_argument("--output_jsonl", default="./output/websites_annotated.jsonl", help="Output path for downloaded results")
+    parser.add_argument("--content_types", nargs='+', default=['text/html'], help="Target content types")
     args = parser.parse_args()
 
     if torch.cuda.is_available():
@@ -119,7 +124,7 @@ def main():
 
     # Loading data
     print("Streaming records with 'text/html' content type from the SQLite database")
-    raw_records = list(get_ml_dataset_fixed(args.db_path, target_types='text/html'))
+    raw_records = list(get_ml_dataset_fixed(args.db_path, target_types=args.content_types))
 
     if not raw_records:
            print("No records available or processed inside the database")
@@ -137,7 +142,8 @@ def main():
 
     # Start of the loop
     for idx, row in df.iterrows():
-        cleaned_text = process_payload(row['payload'], run_skeletonized=not args.skip_skeleton)
+        raw_text = str(row['payload'])[:3000]
+        cleaned_text = process_payload(raw_text, run_skeletonized=not args.skip_skeleton)
 
         with warnings.catch_warnings():
             warnings.simplefilter("ignore")
