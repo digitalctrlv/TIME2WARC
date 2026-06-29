@@ -10,7 +10,8 @@ Due to file size constraints, the machine learning models and raw WARC datasets 
 2. **Model weights:** Download the model folder and place it in the root directory of this project so the path looks exactly like this:
    `TIME2WARC/models/v2_3_optimal_weights_fold1/` and `TIME2WARC/models/v2_4_optimal_weights_fold2/`
 3. **WARC files:** Download your own warc dataset consisting of `.warc` or `.warc.gz` files and drag them into the dashboard later. 
-4. **URL index**: Make sure to also create an `index_warcs.json` file mapping the seed_urls of the warcs which you would like to predict. It should contain the seed url and preferrably a year variable if you know i.e. the last updated year, or else you can fill in None. It should look like this: {exampleurl.com: 2000}. Once your environment has set up, drag them into the first step of the interface, you need them to parse the warcs.
+4. **URL index**: Make sure to also create an `index_warcs.json` file mapping the seed_urls of the warcs which you would like to predict. It should contain the seed url and preferrably a year variable if you know i.e. the last updated year, or else you can fill in None. It should look like this: `{exampleurl.com: 2000}`. Once your environment has set up, drag them into the first step of the interface, you need them to parse the warcs.
+*Note*: The parser allows urls to start with `www.` or `http:`/`https:` by grabbing the domain name with `netloc`. However, for security reasons it's recommended to use the raw domain name such as `{exampleurl.com: 2000}`.
 
 ## How to run the application
 
