@@ -1,4 +1,4 @@
-# TIME2WARC
+# (BETA)* TIME2WARC
 
 An analytical pipeline and interactive dashboard designed to extract, process, and temporally classify web archives (WARC files). This architecture parses raw web data, extracts HTML payloads, and utilizes a fine-tuned RoBERTa model to predict the creation period of specific domains.
 
