@@ -10,7 +10,7 @@ Due to file size constraints, the machine learning models and raw WARC datasets 
 2. **Model weights:** Download the model folder and place it in the root directory of this project so the path looks exactly like this:
    `TIME2WARC/models/v2_3_optimal_weights_fold1/` and `TIME2WARC/models/v2_4_optimal_weights_fold2/`
 3. **WARC files:** Download your own warc dataset consisting of `.warc` or `.warc.gz` files and drag them into the dashboard later. 
-4. **URL index**: Make sure to also create an `index_warcs.json` file mapping the seed_urls of the warcs which you would like to predict. It should contain the seed url and preferrably a year variable if you know i.e. the last updated year, or else you can fill in None. It should look like this: `{exampleurl.com: 2000}`. Once your environment has set up, drag them into the first step of the interface, you need them to parse the warcs.
+4. **URL index**: Make sure to also create an `index_warcs.json` file mapping the seed_urls of the warcs which you would like to predict. It should contain the seed url and preferrably a year variable if you know i.e. the last updated year, or else you can fill in None. It should look like this: `{exampleurl.com: 2000}`. Once your environment has set up, drag them into the first step of the interface, you need them to parse the warcs.  
 **Note**: The parser allows urls to start with `www.` or `http:`/`https:` by grabbing the domain name with `netloc`. However, for security reasons it's recommended to use the raw domain name such as `{exampleurl.com: 2000}`.
 
 ## How to run the application
@@ -18,8 +18,13 @@ Due to file size constraints, the machine learning models and raw WARC datasets 
 1. **Clone the repository**
    ```bash
    git clone https://github.com/digitalctrlv/TIME2WARC.git
+   ```
+   Optional: delete the directory `script_training` which was included for educational purposes. It is not used for running the app.  
+   ```bash
+   rm -r script_training
+   ```
 
-2. **OPTIONAL: Create a virtual environment**
+3. **OPTIONAL: Create a virtual environment**  
    It's recommended to create a virtual environment within the directory to install the requirements package. A quick step-by-step guide from: https://www.geeksforgeeks.org/python/create-virtual-environment-using-venv-python/
 
    Check if venv is already installed
@@ -39,23 +44,23 @@ Due to file size constraints, the machine learning models and raw WARC datasets 
    python -m venv venv
    ```
 
-3. **Activate the virtual environment:**
+4. **Activate the virtual environment:**
    ```bash
    * Windows (PowerShell): `.venv\Scripts\Activate.ps1`
    * Windows (CMD): `.venv\Scripts\activate.bat`
    * Mac/Linux: `source .venv/bin/activate`
 
-4. **Check python version**
-   Before installing the contents of the requirements, check if you have at least python version **3.11**. Namely, some packages are not supported by earlier versions and will throw conflicts.
+5. **Check python version**  
+Before installing the contents of the requirements, check if you have at least python version **3.11**. Namely, some packages are not supported by earlier versions and will throw conflicts.
    ```bash
    python3 --version
    ```
    
-5. **Install dependencies (if not already installed):**
+6. **Install dependencies (if not already installed):**
    ```bash
    pip install -r requirements.txt
 
-6. **Launch the graphical interface via your terminal and open in a browser**
+7. **Launch the graphical interface via your terminal and open in a browser**
    ```bash
    streamlit run app.py
    ```
@@ -73,3 +78,9 @@ Due to file size constraints, the machine learning models and raw WARC datasets 
 
 ## Online version
 The online application is not yet live, but is being worked on! Also, it has only been 
+
+## Contributing & support
+
+If you encounter any bugs or unexpected behavior while running **TIME2WARC**, please feel free to:
+* **Open an issue:** Drop a bug report directly on the issues tab.
+* **Reach out:** Contact me via [Email](mailto:anouk.flinkert@studio.unibo.it).
