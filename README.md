@@ -70,11 +70,38 @@ Before installing the contents of the requirements, check if you have at least p
    streamlit run app.py --server.maxUploadSize=2000
    
 ## Dashboard
-**Tab 1**: Scans the uploaded_warcs/ directory, initializes the relational SQLite database (websites.db), and extracts the raw text/html payloads from the inputted archive. Also make sure to upload the index provided in the /warcs directory.
+![homescreen](assets/img/app-homescreen.png)  
 
-**Tab 2**: Loads the external RoBERTa model and evaluates the extracted HTML payloads. It assigns a predicted temporal period and a statistical confidence score to each domain, writing the outputs directly back to the database.
+## Tab 1  
+Scans the uploaded_warcs/ directory, initializes the relational SQLite database (websites.db), and extracts the raw text/html payloads from the inputted archive. Also make sure to upload the index provided in the /warcs directory.  
+![tab1](assets/img/app-step1.png)
 
-**Tab 3**: Displays the final results in an interactive data table. It provides a downloadable JSON file containing the fully annotated dataset, ready for downstream historical analysis.
+## Tab 2  
+Loads the external RoBERTa model and evaluates the extracted HTML payloads. It assigns a predicted temporal period and a statistical confidence score to each domain, writing the outputs directly back to the database.  
+![tab2](assets/img/app-step2.png)
+
+## Tab 3  
+Displays the final results in an interactive data table. It provides a downloadable JSON file containing the fully annotated dataset, ready for downstream historical analysis.  
+![tab3](assets/img/app-step3.png)
+
+## Link to Open Wayback machine  
+The final column provides a link that by default redirects you to the wayback machine of the Internet Archive.  
+![tab3_1](assets/img/app-step3_1.png)
+
+To configure this with your own webarchive, change the `base_url` in `app.py`:
+```
+# Directs to Internet Archive
+base_url = "http://web.archive.org/web/"
+
+# Replace this with your own wayback machine url: e.g. base_url = "http://webarchief.kb:8080"
+
+# Helps to direct to the specific harvest in the given archive by using the WARC timestamp
+# timestamp = df_full['warc_filename'].str.extract(r'IAH-(\d{14})', expand=False)
+df_full['wayback_link'] = base_url + df_full['seed_url'].astype(str)
+```
+## SQL custom queries  
+Write raw SQLite queries to filter, aggregate, and explore your parsed data.   
+![tab4](assets/img/app-step4.png)
 
 ## Online version
 The online application is not yet live, but is being worked on! Also, it has only been 
