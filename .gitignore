@@ -23,3 +23,7 @@ output/
 warcs/toy
 warcs/index_warcs.json
 .streamlit/
+
+# macOS system files
+.DS_Store
+**/.DS_Store

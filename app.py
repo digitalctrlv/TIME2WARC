@@ -17,7 +17,7 @@ def load_css_fonts(css_path, fonts_dir_path):
     if fonts_dir.exists():
         for font_file in fonts_dir.glob("*.ttf"):
             font_name = font_file.stem
-            with open(font_file, "rb") as f_font:  # Gebruik f_font
+            with open(font_file, "rb") as f_font:
                 font_data = base64.b64encode(f_font.read()).decode("utf-8")
             
             font_face_css += f"""
@@ -124,7 +124,6 @@ with tab1:
                     
                 st.info("⏳Parsing active directories and extracting valid responses to SQLite schema tables...")
                 
-                # Call your ingestion script directly
                 cmd = [sys.executable, "script_app/warc_parser.py", "--warc_dir", UPLOAD_DIR, "--db_path", DB_PATH, "--index", index_path]
                 result = subprocess.run(cmd, capture_output=True, text=True)
                 
@@ -346,12 +345,16 @@ with tab3:
                     HAVING MAX(period) IS NOT NULL
                 """
                 
-            # Safely execute the query
             df_full = pd.read_sql_query(query, conn)
             
-            base_url = "http://webarchief.kb.nl:8080/archived/"
-            timestamp = df_full['warc_filename'].str.extract(r'IAH-(\d{14})', expand=False)
-            df_full['wayback_link'] = base_url + timestamp + "/https://" + df_full['seed_url'].astype(str)
+            # Directs to Internet Archive
+            base_url = "http://web.archive.org/web/"
+
+            # Replace this with your own wayback machine url: e.g. base_url = "http://webarchief.kb:8080"
+
+            # Helps to direct to the specific harvest in the given archive by using the WARC timestamp
+            # timestamp = df_full['warc_filename'].str.extract(r'IAH-(\d{14})', expand=False)
+            df_full['wayback_link'] = base_url + df_full['seed_url'].astype(str)
 
             # Process dataframe for the UI (truncate payload)
             if not df_full.empty:
