@@ -1,0 +1,28 @@
+cff-version: 1.2.0
+message: "If you use this software, please cite it as below."
+title: "TIME2WARC"
+type: software
+authors:
+  - family-names: "Flinkert"
+    given-names: "Anouk"
+    affiliation: "University of Bologna"
+    affiliation: "KB National Library of the Netherlands"
+orcid: "https://orcid.org/0009-0001-6190-8595"
+abstract: >-
+  TIME2WARC estimates the period in which retrospectively archived
+  websites were made from their source code, using a fine-tuned
+  RoBERTa model. The repository contains the code, the list of index
+  fossils, the manual annotations and the results of the explainability
+  analysis of the master's thesis "From Source Code to Metadata: Dating
+  the XS4ALL Web Collection Through Computational Web Philology".
+keywords:
+  - web archiving
+  - web philology
+  - source code
+  - dating
+  - Transformer
+  - XS4ALL
+license: MIT
+repository-code: "https://github.com/digitalctrlv/TIME2WARC"
+version: "1.0.0"
+date-released: "2026-10-11"
