@@ -20,9 +20,9 @@ uploaded_warcs/
 output/
 .vscode/
 .idea/
-warcs/toy
-warcs/index_warcs.json
 .streamlit/
+slides/
+warcs/
 
 # macOS system files
 .DS_Store

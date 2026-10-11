@@ -7,7 +7,7 @@ from unittest import signals
 from pathlib import Path
 import sqlite3
 
-from sqlite_db import get_ml_dataset
+from sqlite_db import get_ml_dataset_fixed
 
 # =========================== Labeling functions =========================== #
 # This component uses regular expression string matching to find occurrences of
@@ -57,14 +57,16 @@ class SignalExtractor:
             r'editplus\s*2\.(?:11|12|20|21|30))', re.I
         ),
         'gen_2007_2010': re.compile(
-            r'<meta\s+name=["\']?(?:generator|formatter)["\']?\s+content=["\']?[^>]*?'
-            r'(?:frontpage\s*6\.0|expression\s*7\.0|'
+            r'<meta\s+name=["\"]?(?:generator|formatter)["\"]?\s+content=["\"]?[^>]*?'
+            r'(?:'
             r'netobjects\s*fusion\s*11\b|'
             r'openoffice\.org\s*(?:2\.[1-4]|3\.[0-3])|'
-            r'editplus\s*(?:2\.31|3\.0[01]))', re.I
+            r'editplus\s*(?:2\.31|3\.0[01])'
+            r')',
+            re.I
         ),
         'gen_post_2010': re.compile(
-            r'<meta\s+name=["\']?(?:generator|formatter)["\']?\s+content=["\']?[^>]*?'
+            r'<meta\s+name=["\"]?(?:generator|formatter)["\"]?\s+content=["\"]?[^>]*?'
             r'(?:netobjects\s*fusion\s*(?:xii|2013|2015))', re.I
         )
     }
