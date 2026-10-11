@@ -1,5 +1,5 @@
 # TIME2WARC
-https://doi.org/10.5281/zenodo.23299750
+[![DOI](https://zenodo.org/badge/DOI/10.5281/zenodo.23299750.svg)](https://doi.org/10.5281/zenodo.23299750)
 
 An analytical pipeline and interactive dashboard designed to extract, process, and temporally classify web archives (WARC files). This architecture parses raw web data, extracts HTML payloads, and utilizes a fine-tuned RoBERTa model to predict the creation period of specific domains.
 
