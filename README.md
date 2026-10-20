@@ -112,3 +112,7 @@ The online application is not yet live, but is being worked on! Also, it has onl
 If you encounter any bugs or unexpected behavior while running **TIME2WARC**, please feel free to:
 * **Open an issue:** Drop a bug report directly on the issues tab.
 * **Reach out:** Contact me via [Email](mailto:anouk.flinkert@studio.unibo.it).
+
+## References
+* Windows 98 Icons from © 2026 Alex Meub: https://alexmeub.com/projects/windows-98-icons/
+* Stylesheet elements used and edited from Jordan Scales: https://jdan.github.io/98.css
